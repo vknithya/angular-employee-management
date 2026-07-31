@@ -8,6 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { AuthService } from '../auth';
 
 @Component({
   selector: 'app-login',
@@ -28,6 +29,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 export class Login {
 
   private readonly fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+
   hidePassword = true;
   isLoading = false;
   private readonly MOCK_API_DELAY = 2000;
@@ -50,6 +53,8 @@ onLogin(): void {
   this.isLoading = true;
 
   console.log(this.loginForm.getRawValue());
+  const { email, password } = this.loginForm.getRawValue();
+  this.authService.login(email,password);
 
   setTimeout(() => {
     this.isLoading = false;
