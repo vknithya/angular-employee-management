@@ -9,6 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../auth';
+import { LoginRequest } from '../login-request.model';
 
 @Component({
   selector: 'app-login',
@@ -53,8 +54,10 @@ onLogin(): void {
   this.isLoading = true;
 
   console.log(this.loginForm.getRawValue());
-  const { email, password } = this.loginForm.getRawValue();
-  this.authService.login(email,password);
+  //const { email, password } = this.loginForm.getRawValue();
+  const request: LoginRequest = this.loginForm.getRawValue();
+  //this.authService.login(email,password);
+  this.authService.login(request);
 
   setTimeout(() => {
     this.isLoading = false;
