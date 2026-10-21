@@ -1,0 +1,45 @@
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+
+  mat-form-field {
+    width: 200px;
+  }
+
+  .search-field {
+    flex: 1 1 280px;
+  }
+}
+
+.person-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+
+  div {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  small {
+    color: var(--mat-sys-on-surface-variant);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.row-busy {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+@media (max-width: 600px) {
+  .filters mat-form-field {
+    width: 100%;
+  }
+}

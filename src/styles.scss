@@ -20,20 +20,351 @@ html {
 }
 
 body {
-  // Default the application to a light color theme. This can be changed to
-  // `dark` to enable the dark color theme, or to `light dark` to defer to the
-  // user's system settings.
+  // The Material tokens use light-dark(), so switching color-scheme switches the theme.
+  // ThemeService toggles the `dark-theme` class.
   color-scheme: light;
 
   // Set a default background, font and text colors for the application using
   // Angular Material's system-level CSS variables. Learn more about these
   // variables at https://material.angular.dev/guide/system-variables
-  background-color: var(--mat-sys-surface);
+  background-color: var(--mat-sys-surface-container-low);
   color: var(--mat-sys-on-surface);
   font: var(--mat-sys-body-medium);
 
   // Reset the user agent margin.
   margin: 0;
   height: 100%;
+
+  // Status colours (always shown with a text label).
+  --success: #1b7f3b;
+  --success-bg: #dcf5e3;
+  --warning: #8a5300;
+  --warning-bg: #fdeccc;
+  --danger: #b3261e;
+  --danger-bg: #fbe2e0;
+  --info: #0b5cad;
+  --info-bg: #dce9fb;
+  --neutral: #5d5f63;
+  --neutral-bg: #e9eaee;
+
+  &.dark-theme {
+    color-scheme: dark;
+    --success: #7fd99a;
+    --success-bg: #173a24;
+    --warning: #f5c26b;
+    --warning-bg: #3d2d0f;
+    --danger: #f2b8b5;
+    --danger-bg: #4a1c1a;
+    --info: #a8c8f5;
+    --info-bg: #15304f;
+    --neutral: #c4c6cc;
+    --neutral-bg: #34363b;
+  }
 }
-/* You can add global styles to this file, and also import other style files */
+
+/* ------------------------------------------------------------ Layout */
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 16px;
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at 15% 20%, var(--mat-sys-primary-container), transparent 45%),
+    radial-gradient(circle at 85% 85%, var(--mat-sys-tertiary-container), transparent 40%),
+    var(--mat-sys-surface-container-low);
+}
+
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
+
+  mat-icon {
+    font-size: 30px;
+    width: 30px;
+    height: 30px;
+  }
+
+  &.small {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+  }
+}
+
+.back-link {
+  text-align: center;
+  margin: 24px 0 0;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+// Element + class selector to beat mat-card's default column direction.
+mat-card.stat-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+
+  &.clickable {
+    cursor: pointer;
+    transition: box-shadow 150ms ease, transform 150ms ease;
+
+    &:hover {
+      box-shadow: var(--mat-sys-level2);
+      transform: translateY(-1px);
+    }
+  }
+}
+
+.stat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+
+.stat-value {
+  font: var(--mat-sys-headline-medium);
+  font-weight: 600;
+}
+
+.stat-label {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+
+  mat-card-header {
+    padding-bottom: 8px;
+  }
+}
+
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  color: inherit;
+  text-decoration: none;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.link-row:hover strong {
+  color: var(--mat-sys-primary);
+}
+
+.list-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+
+  small {
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.detail-list {
+  display: grid;
+  grid-template-columns: minmax(110px, auto) 1fr;
+  gap: 10px 16px;
+  margin: 0;
+
+  dt {
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  dd {
+    margin: 0;
+    word-break: break-word;
+  }
+}
+
+/* -------------------------------------------------------------- Forms */
+
+.full-width {
+  width: 100%;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 4px 16px;
+}
+
+.span-full {
+  grid-column: 1 / -1;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.button-content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  // Spinners inside buttons follow the button's text colour.
+  .mat-mdc-progress-spinner circle {
+    stroke: currentColor !important;
+  }
+}
+
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  font: var(--mat-sys-body-medium);
+
+  mat-icon {
+    flex-shrink: 0;
+  }
+
+  &.alert-error {
+    background: var(--danger-bg);
+    color: var(--danger);
+  }
+
+  &.alert-info {
+    background: var(--info-bg);
+    color: var(--info);
+  }
+}
+
+/* ------------------------------------------------------------- Tables */
+
+.table-card {
+  overflow: hidden;
+}
+
+.card-header-padded {
+  padding: 16px;
+}
+
+.table-scroll {
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+    min-width: 640px;
+  }
+}
+
+.clickable-row {
+  cursor: pointer;
+
+  &:hover {
+    background: var(--mat-sys-surface-container-high);
+  }
+}
+
+.actions-cell {
+  width: 1%;
+  text-align: right;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------ Helpers */
+
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.danger-text {
+  color: var(--danger) !important;
+}
+
+.success-text {
+  color: var(--success) !important;
+}
+
+.mat-mdc-unelevated-button.danger-button:not(:disabled) {
+  background-color: var(--mat-sys-error);
+  color: var(--mat-sys-on-error);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.status-chip {
+  &.tone-success { --chip-bg: var(--success-bg); --chip-fg: var(--success); }
+  &.tone-warning { --chip-bg: var(--warning-bg); --chip-fg: var(--warning); }
+  &.tone-danger { --chip-bg: var(--danger-bg); --chip-fg: var(--danger); }
+  &.tone-info { --chip-bg: var(--info-bg); --chip-fg: var(--info); }
+  &.tone-neutral { --chip-bg: var(--neutral-bg); --chip-fg: var(--neutral); }
+}
+
+.active-link {
+  --mat-list-list-item-label-text-color: var(--mat-sys-on-secondary-container);
+}
+
+/* ---------------------------------------------------------- Snackbars */
+
+.mat-mdc-snack-bar-container {
+  &.snack-success {
+    --mat-snack-bar-container-color: #1b5e20;
+    --mat-snack-bar-supporting-text-color: #fff;
+    --mat-snack-bar-button-color: #c8e6c9;
+  }
+
+  &.snack-error {
+    --mat-snack-bar-container-color: #b3261e;
+    --mat-snack-bar-supporting-text-color: #fff;
+    --mat-snack-bar-button-color: #ffdad6;
+  }
+}

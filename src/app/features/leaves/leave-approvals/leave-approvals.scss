@@ -1,0 +1,46 @@
+.toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+}
+
+.count {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--mat-sys-surface-container-highest);
+  font: var(--mat-sys-label-small);
+}
+
+.search-field {
+  flex: 0 1 260px;
+}
+
+.person-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.reason-cell {
+  max-width: 260px;
+}
+
+.row-busy {
+  opacity: 0.5;
+}
+
+@media (max-width: 600px) {
+  .search-field {
+    flex-basis: 100%;
+  }
+
+  mat-button-toggle-group {
+    overflow-x: auto;
+    max-width: 100%;
+  }
+}

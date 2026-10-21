@@ -1,0 +1,129 @@
+<app-page-header title="My profile" subtitle="Your details and account settings" />
+
+@if (isLoading()) {
+  <app-loader message="Loading your profile..." />
+} @else if (loadFailed()) {
+  <app-empty-state icon="cloud_off" title="Couldn't load your profile" message="Please try again.">
+    <button mat-stroked-button (click)="load()">Retry</button>
+  </app-empty-state>
+} @else if (employee(); as e) {
+  <div class="profile-layout">
+    <mat-card class="profile-card">
+      <app-avatar [name]="e.firstName + ' ' + e.lastName" [size]="96" />
+      <h2>{{ e.firstName }} {{ e.lastName }}</h2>
+      <p class="muted">{{ e.designation }}</p>
+      <app-status-chip [status]="e.status" />
+      <dl class="detail-list">
+        <dt>Employee ID</dt><dd>{{ e.employeeCode }}</dd>
+        <dt>Email</dt><dd>{{ e.email }}</dd>
+        <dt>Department</dt><dd>{{ e.departmentName }}</dd>
+        <dt>Reports to</dt><dd>{{ e.managerName ?? '—' }}</dd>
+        <dt>Joined</dt><dd>{{ e.dateOfJoining | date: 'd MMM y' }}</dd>
+        <dt>Role</dt><dd>{{ user()?.role === 'admin' ? 'Administrator' : 'Employee' }}</dd>
+      </dl>
+    </mat-card>
+
+    <mat-card class="tabs-card">
+      <mat-tab-group animationDuration="150ms" mat-stretch-tabs="false">
+        <mat-tab label="Contact details">
+          <form [formGroup]="contactForm" (ngSubmit)="saveContact()" class="tab-body">
+            <p class="muted">
+              Keep your contact information up to date. For changes to your name, role or department,
+              contact HR.
+            </p>
+            <div class="form-grid">
+              <mat-form-field appearance="outline">
+                <mat-label>Phone</mat-label>
+                <input matInput type="tel" formControlName="phone" />
+                @if (contactForm.controls.phone.hasError('required')) {
+                  <mat-error>Phone is required</mat-error>
+                } @else {
+                  <mat-error>Enter a valid phone number</mat-error>
+                }
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Emergency contact</mat-label>
+                <input matInput type="tel" formControlName="emergencyContact" />
+                <mat-error>Enter a valid phone number</mat-error>
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="span-full">
+                <mat-label>Address</mat-label>
+                <textarea matInput formControlName="address" rows="2"></textarea>
+              </mat-form-field>
+            </div>
+            <div class="form-actions">
+              <button mat-button type="button" (click)="resetContact()" [disabled]="!contactForm.dirty || isSaving()">
+                Discard
+              </button>
+              <button mat-flat-button type="submit" [disabled]="!contactForm.dirty || isSaving()">
+                @if (isSaving()) {
+                  <span class="button-content"><mat-spinner diameter="18" /> Saving...</span>
+                } @else {
+                  Save changes
+                }
+              </button>
+            </div>
+          </form>
+        </mat-tab>
+
+        <mat-tab label="Security">
+          <form
+            [formGroup]="passwordForm"
+            #passwordDirective="ngForm"
+            (ngSubmit)="changePassword(passwordDirective)"
+            class="tab-body narrow"
+          >
+            <p class="muted">Use at least 8 characters with upper and lower case letters, a number and a symbol.</p>
+
+            @if (passwordError()) {
+              <div class="alert alert-error" role="alert">
+                <mat-icon>error_outline</mat-icon><span>{{ passwordError() }}</span>
+              </div>
+            }
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Current password</mat-label>
+              <input matInput [type]="hidePasswords() ? 'password' : 'text'" formControlName="currentPassword" autocomplete="current-password" />
+              <button mat-icon-button matSuffix type="button" (click)="hidePasswords.set(!hidePasswords())" aria-label="Toggle password visibility">
+                <mat-icon>{{ hidePasswords() ? 'visibility' : 'visibility_off' }}</mat-icon>
+              </button>
+              <mat-error>Current password is required</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>New password</mat-label>
+              <input matInput [type]="hidePasswords() ? 'password' : 'text'" formControlName="newPassword" autocomplete="new-password" />
+              @if (passwordForm.controls.newPassword.hasError('required')) {
+                <mat-error>New password is required</mat-error>
+              } @else if (passwordForm.controls.newPassword.hasError('minlength')) {
+                <mat-error>Must be at least 8 characters</mat-error>
+              } @else {
+                <mat-error>Add upper & lower case letters, a number and a symbol</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Confirm new password</mat-label>
+              <input matInput [type]="hidePasswords() ? 'password' : 'text'" formControlName="confirmPassword" autocomplete="new-password" />
+              @if (passwordForm.controls.confirmPassword.hasError('mismatch')) {
+                <mat-error>Passwords do not match</mat-error>
+              } @else {
+                <mat-error>Please confirm your new password</mat-error>
+              }
+            </mat-form-field>
+
+            <div class="form-actions">
+              <button mat-flat-button type="submit" [disabled]="isChangingPassword()">
+                @if (isChangingPassword()) {
+                  <span class="button-content"><mat-spinner diameter="18" /> Updating...</span>
+                } @else {
+                  Update password
+                }
+              </button>
+            </div>
+          </form>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card>
+  </div>
+}

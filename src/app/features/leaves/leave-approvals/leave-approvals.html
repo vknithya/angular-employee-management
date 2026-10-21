@@ -1,0 +1,98 @@
+<mat-card class="table-card">
+  <div class="toolbar-row">
+    <mat-button-toggle-group
+      [value]="statusFilter()"
+      (change)="statusFilter.set($event.value)"
+      hideSingleSelectionIndicator
+      aria-label="Filter by status"
+    >
+      @for (f of filters; track f) {
+        <mat-button-toggle [value]="f">
+          {{ f }}
+          @if (!isLoading()) {
+            <span class="count">{{ counts()[f] ?? 0 }}</span>
+          }
+        </mat-button-toggle>
+      }
+    </mat-button-toggle-group>
+
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="search-field">
+      <mat-icon matPrefix>search</mat-icon>
+      <mat-label>Search employee</mat-label>
+      <input matInput [value]="search()" (input)="search.set($any($event.target).value)" />
+    </mat-form-field>
+  </div>
+
+  @if (isLoading()) {
+    <app-loader message="Loading leave requests..." />
+  } @else if (loadFailed()) {
+    <app-empty-state icon="cloud_off" title="Couldn't load requests" message="Please try again.">
+      <button mat-stroked-button (click)="load()">Retry</button>
+    </app-empty-state>
+  } @else if (filtered().length) {
+    <div class="table-scroll">
+      <table mat-table [dataSource]="filtered()">
+        <ng-container matColumnDef="employee">
+          <th mat-header-cell *matHeaderCellDef>Employee</th>
+          <td mat-cell *matCellDef="let l">
+            <div class="person-inline">
+              <app-avatar [name]="l.employeeName" [size]="32" />
+              <span>{{ l.employeeName }}</span>
+            </div>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="type">
+          <th mat-header-cell *matHeaderCellDef>Type</th>
+          <td mat-cell *matCellDef="let l">{{ l.type }}</td>
+        </ng-container>
+        <ng-container matColumnDef="dates">
+          <th mat-header-cell *matHeaderCellDef>Dates</th>
+          <td mat-cell *matCellDef="let l" class="nowrap">
+            {{ l.startDate | date: 'd MMM' }} – {{ l.endDate | date: 'd MMM y' }}
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="days">
+          <th mat-header-cell *matHeaderCellDef>Days</th>
+          <td mat-cell *matCellDef="let l">{{ l.days }}</td>
+        </ng-container>
+        <ng-container matColumnDef="reason">
+          <th mat-header-cell *matHeaderCellDef>Reason</th>
+          <td mat-cell *matCellDef="let l" class="reason-cell">{{ l.reason }}</td>
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let l">
+            <app-status-chip [status]="l.status" [matTooltip]="l.reviewerComment ?? ''" />
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef><span class="sr-only">Actions</span></th>
+          <td mat-cell *matCellDef="let l" class="actions-cell nowrap">
+            @if (reviewingId() === l.id) {
+              <mat-spinner diameter="24" />
+            } @else if (l.status === 'Pending') {
+              @if (isOwn(l)) {
+                <small class="muted">Your request</small>
+              } @else {
+                <button mat-icon-button class="success-text" matTooltip="Approve" (click)="review(l, 'Approved')">
+                  <mat-icon>check_circle</mat-icon>
+                </button>
+                <button mat-icon-button class="danger-text" matTooltip="Reject" (click)="review(l, 'Rejected')">
+                  <mat-icon>cancel</mat-icon>
+                </button>
+              }
+            }
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="columns"></tr>
+        <tr mat-row *matRowDef="let row; columns: columns" [class.row-busy]="reviewingId() === row.id"></tr>
+      </table>
+    </div>
+  } @else {
+    <app-empty-state
+      icon="task_alt"
+      [title]="statusFilter() === 'Pending' ? 'No pending requests' : 'No requests found'"
+      [message]="statusFilter() === 'Pending' ? 'You\'re all caught up!' : 'Try a different filter.'"
+    />
+  }
+</mat-card>

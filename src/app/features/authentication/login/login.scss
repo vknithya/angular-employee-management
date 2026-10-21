@@ -1,28 +1,27 @@
-.login-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background-color: #f5f5f5;
+.login-card {
+  width: min(465px, 100%);
+  padding: 32px;
+  box-sizing: border-box;
 }
 
-.login-card {
-   // width: 465px;
-    width: min(465px, 90vw);
-    padding: 32px;
+.brand {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
 }
 
 h1 {
-    text-align: center;
-    margin-bottom: 8px;
-    font-weight: 600;
+  text-align: center;
+  margin: 0 0 8px;
+  font: var(--mat-sys-headline-small);
+  font-weight: 600;
 }
 
 h2 {
   text-align: center;
-  font-weight: 400;
-  color: gray;
-  margin-bottom: 24px;
+  font: var(--mat-sys-body-large);
+  color: var(--mat-sys-on-surface-variant);
+  margin: 0 0 24px;
 }
 
 .full-width {
@@ -31,10 +30,6 @@ h2 {
 
 .login-button {
   height: 48px;
-  // display: flex;
-  // justify-content: center;
-  // align-items: center;
-  // gap: 8px;
 }
 
 .button-content {
@@ -42,37 +37,45 @@ h2 {
   align-items: center;
   justify-content: center;
   gap: 8px;
-
-  
-//   mat-spinner {
-//   --mdc-circular-progress-active-indicator-color: white;
-// }
-}
-
-// .mat-mdc-progress-spinner {
-//   --mdc-circular-progress-active-indicator-color: white;
-// }
-
-// .mat-mdc-progress-spinner circle {
-//   stroke: white;
-// }
-
-/* TODO (Day 4):
- * Temporary workaround to style Angular Material spinner.
- * Revisit when learning Angular Material theming.
- */
-:host ::ng-deep .mat-mdc-progress-spinner circle {
-  stroke: white;
 }
 
 .login-options {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 16px 0 24px;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 24px;
 }
 
 .forgot-password {
   text-decoration: none;
   font-size: 14px;
+  color: var(--mat-sys-primary);
+}
+
+.demo-accounts {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  text-align: center;
+
+  p {
+    margin: 0 0 12px;
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.demo-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: 24px 16px;
+  }
 }

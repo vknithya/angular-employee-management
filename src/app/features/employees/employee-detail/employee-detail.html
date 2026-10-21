@@ -1,0 +1,123 @@
+<a mat-button routerLink="/employees" class="back-link"><mat-icon>arrow_back</mat-icon> All employees</a>
+
+@if (isLoading()) {
+  <app-loader message="Loading employee details..." />
+} @else if (error() === 'not-found') {
+  <app-empty-state icon="person_off" title="Employee not found" message="This record may have been deleted.">
+    <a mat-stroked-button routerLink="/employees">Back to employees</a>
+  </app-empty-state>
+} @else if (error()) {
+  <app-empty-state icon="cloud_off" title="Couldn't load this employee" message="Please try again.">
+    <button mat-stroked-button (click)="load()">Retry</button>
+  </app-empty-state>
+} @else if (employee(); as e) {
+  <mat-card class="hero">
+    <app-avatar [name]="fullName()" [size]="80" />
+    <div class="hero-text">
+      <h1>{{ fullName() }}</h1>
+      <p>{{ e.designation }} · {{ e.departmentName }}</p>
+      <div class="hero-meta">
+        <app-status-chip [status]="e.status" />
+        <span><mat-icon inline>badge</mat-icon> {{ e.employeeCode }}</span>
+        <span><mat-icon inline>mail</mat-icon> {{ e.email }}</span>
+      </div>
+    </div>
+    @if (auth.isAdmin()) {
+      <div class="hero-actions">
+        <a mat-flat-button [routerLink]="['/employees', e.id, 'edit']" [disabled]="isDeleting()">
+          <mat-icon>edit</mat-icon> Edit
+        </a>
+        <button mat-stroked-button class="danger-text" (click)="delete()" [disabled]="isDeleting()">
+          @if (isDeleting()) {
+            <span class="button-content"><mat-spinner diameter="18" /> Deleting...</span>
+          } @else {
+            <span class="button-content"><mat-icon>delete</mat-icon> Delete</span>
+          }
+        </button>
+      </div>
+    }
+  </mat-card>
+
+  <div class="dash-grid">
+    <mat-card>
+      <mat-card-header><mat-card-title>Employment</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <dl class="detail-list">
+          <dt>Department</dt><dd>{{ e.departmentName }}</dd>
+          <dt>Designation</dt><dd>{{ e.designation }}</dd>
+          <dt>Employment type</dt><dd>{{ e.employmentType }}</dd>
+          <dt>Reports to</dt>
+          <dd>
+            @if (e.managerId) {
+              <a [routerLink]="['/employees', e.managerId]">{{ e.managerName }}</a>
+            } @else {
+              —
+            }
+          </dd>
+          <dt>Date of joining</dt><dd>{{ e.dateOfJoining | date: 'd MMM y' }}</dd>
+          @if (canSeePrivate()) {
+            <dt>Annual salary</dt><dd>{{ e.salary | currency: 'INR' : 'symbol' : '1.0-0' }}</dd>
+          }
+        </dl>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-header><mat-card-title>Contact</mat-card-title></mat-card-header>
+      <mat-card-content>
+        <dl class="detail-list">
+          <dt>Email</dt><dd><a [href]="'mailto:' + e.email">{{ e.email }}</a></dd>
+          <dt>Phone</dt><dd>{{ e.phone }}</dd>
+          @if (canSeePrivate()) {
+            <dt>Address</dt><dd>{{ e.address || '—' }}</dd>
+            <dt>Emergency contact</dt><dd>{{ e.emergencyContact || '—' }}</dd>
+          }
+        </dl>
+      </mat-card-content>
+    </mat-card>
+
+    @if (canSeePrivate()) {
+      <mat-card>
+        <mat-card-header><mat-card-title>Personal</mat-card-title></mat-card-header>
+        <mat-card-content>
+          <dl class="detail-list">
+            <dt>Gender</dt><dd>{{ e.gender }}</dd>
+            <dt>Date of birth</dt><dd>{{ e.dateOfBirth | date: 'd MMM y' }} ({{ age() }} yrs)</dd>
+          </dl>
+        </mat-card-content>
+      </mat-card>
+    }
+  </div>
+
+  @if (auth.isAdmin()) {
+    <mat-card class="table-card leave-history">
+      <mat-card-header><mat-card-title>Leave history</mat-card-title></mat-card-header>
+      @if (leaves().length) {
+        <div class="table-scroll">
+          <table mat-table [dataSource]="leaves()">
+            <ng-container matColumnDef="type">
+              <th mat-header-cell *matHeaderCellDef>Type</th>
+              <td mat-cell *matCellDef="let l">{{ l.type }}</td>
+            </ng-container>
+            <ng-container matColumnDef="dates">
+              <th mat-header-cell *matHeaderCellDef>Dates</th>
+              <td mat-cell *matCellDef="let l">{{ l.startDate | date: 'd MMM' }} – {{ l.endDate | date: 'd MMM y' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="days">
+              <th mat-header-cell *matHeaderCellDef>Days</th>
+              <td mat-cell *matCellDef="let l">{{ l.days }}</td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let l"><app-status-chip [status]="l.status" /></td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="leaveColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: leaveColumns"></tr>
+          </table>
+        </div>
+      } @else {
+        <p class="muted padded">No leave records.</p>
+      }
+    </mat-card>
+  }
+}

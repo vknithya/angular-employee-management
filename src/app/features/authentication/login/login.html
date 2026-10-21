@@ -1,78 +1,104 @@
 <div class="login-container">
   <mat-card class="login-card">
 
+    <div class="brand">
+      <span class="brand-logo"><mat-icon>groups</mat-icon></span>
+    </div>
     <h1>Employee Management Portal</h1>
     <h2>Sign in to continue</h2>
+
+    @if (sessionExpired && !errorMessage()) {
+      <div class="alert alert-info" role="status">
+        <mat-icon>schedule</mat-icon>
+        <span>Your session has expired. Please sign in again.</span>
+      </div>
+    }
+
+    @if (errorMessage()) {
+      <div class="alert alert-error" role="alert">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
 
     <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
         <mat-form-field appearance="outline" class="full-width">
             <mat-label>Email Address</mat-label>
-            <input matInput type="name" formControlName="email" placeholder="Enter your email" />
+            <input matInput type="email" formControlName="email" placeholder="Enter your email" autocomplete="username" />
+            <mat-icon matPrefix>mail_outline</mat-icon>
 
-            <mat-error *ngIf="loginForm.controls.email.hasError('required')">Email is required</mat-error>
-            <mat-error *ngIf="loginForm.controls.email.hasError('email')">Please enter a valid email address</mat-error>
+            @if (loginForm.controls.email.hasError('required')) {
+              <mat-error>Email is required</mat-error>
+            } @else if (loginForm.controls.email.hasError('email')) {
+              <mat-error>Please enter a valid email address</mat-error>
+            }
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
             <mat-label>Password</mat-label>
+            <mat-icon matPrefix>lock_outline</mat-icon>
 
             <input
                 matInput
-                [type]="hidePassword ? 'password' : 'text'"
+                [type]="hidePassword() ? 'password' : 'text'"
                 formControlName="password"
-                placeholder="Enter your password">
+                placeholder="Enter your password"
+                autocomplete="current-password">
 
             <button
                 mat-icon-button
                 matSuffix
                 type="button"
-                (click)="togglePasswordVisibility()"> 
-        
+                [attr.aria-label]="hidePassword() ? 'Show password' : 'Hide password'"
+                (click)="togglePasswordVisibility()">
                 <mat-icon>
-                {{ hidePassword ? 'visibility' : 'visibility_off' }}
+                {{ hidePassword() ? 'visibility' : 'visibility_off' }}
                 </mat-icon>
             </button>
-            @if(loginForm.controls.password.hasError('required')) {   
-            <mat-error >
-                Password is required.
-            </mat-error>
-            }
-            <mat-error *ngIf="loginForm.controls.password.hasError('minlength')">
-                Password must be at least 8 characters.
-            </mat-error>
 
+            @if (loginForm.controls.password.hasError('required')) {
+              <mat-error>Password is required.</mat-error>
+            } @else if (loginForm.controls.password.hasError('minlength')) {
+              <mat-error>Password must be at least 8 characters.</mat-error>
+            }
         </mat-form-field>
+
         <div class="login-options">
             <mat-checkbox formControlName="rememberMe">
                 Remember Me
             </mat-checkbox>
-              <a href="javascript:void(0)" class="forgot-password">
+            <a routerLink="/forgot-password" class="forgot-password">
                 Forgot Password?
-              </a>
+            </a>
         </div>
+
         <button
             mat-flat-button
-            color="primary"
             class="full-width login-button"
             type="submit"
-            >
-            @if (isLoading) {
+            [disabled]="isLoading()">
+            @if (isLoading()) {
                 <span class="button-content">
-                <mat-spinner diameter="18"
-                strokeWidth="3"></mat-spinner>
+                <mat-spinner diameter="18" strokeWidth="3"></mat-spinner>
                 <span>Signing In...</span>
                 </span>
             } @else {
                 <span>Sign In</span>
             }
         </button>
-        
     </form>
+
+    <div class="demo-accounts">
+      <p>Demo accounts — click to fill</p>
+      <div class="demo-buttons">
+        @for (account of demoAccounts; track account.email) {
+          <button mat-stroked-button type="button" [disabled]="isLoading()" (click)="useDemoAccount(account)">
+            <mat-icon>{{ account.label === 'Admin' ? 'admin_panel_settings' : 'person' }}</mat-icon>
+            {{ account.label }}
+          </button>
+        }
+      </div>
+    </div>
 
   </mat-card>
 </div>
-<!-- 
-//(click)="hidePassword = !hidePassword" To improve Readability, Maintainability, Testability, Separation of concerns
-//*ngIf="loginForm.controls.password.hasError('required')"
-//[disabled]="loginForm.invalid"
--->

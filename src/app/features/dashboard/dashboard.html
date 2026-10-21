@@ -1,0 +1,215 @@
+<header class="welcome">
+  <div>
+    <h1>{{ greeting() }}</h1>
+    <p>{{ today | date: 'EEEE, d MMMM y' }}</p>
+  </div>
+  <div class="welcome-actions">
+    @if (auth.isAdmin()) {
+      <a mat-flat-button routerLink="/employees/new"><mat-icon>person_add</mat-icon> Add employee</a>
+    }
+    <a mat-stroked-button routerLink="/leaves" [queryParams]="{ apply: true }">
+      <mat-icon>event</mat-icon> Apply leave
+    </a>
+  </div>
+</header>
+
+@if (isLoading()) {
+  <app-loader message="Loading your dashboard..." />
+} @else if (loadFailed()) {
+  <app-empty-state icon="cloud_off" title="Couldn't load the dashboard" message="Please try again.">
+    <button mat-stroked-button (click)="load()">Retry</button>
+  </app-empty-state>
+} @else if (admin(); as d) {
+  <!-- ======================= Admin dashboard ======================= -->
+  <section class="stat-grid">
+    @for (tile of adminTiles(); track tile.label) {
+      <mat-card class="stat-card" [class.clickable]="tile.link" [routerLink]="tile.link ?? null">
+        <span class="stat-icon"><mat-icon>{{ tile.icon }}</mat-icon></span>
+        <div>
+          <div class="stat-value">{{ tile.value }}</div>
+          <div class="stat-label">{{ tile.label }}</div>
+        </div>
+      </mat-card>
+    }
+  </section>
+
+  <section class="dash-grid">
+    <mat-card class="span-2">
+      <mat-card-header>
+        <mat-card-title>Headcount by department</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <ul class="bar-chart" aria-label="Headcount by department">
+          @for (dept of d.departmentDistribution; track dept.departmentId) {
+            <li [matTooltip]="dept.name + ': ' + dept.count + ' employees'">
+              <span class="bar-label">{{ dept.name }}</span>
+              <span class="bar-track">
+                <span class="bar" [style.width.%]="(dept.count / maxDepartmentCount()) * 100"></span>
+              </span>
+              <span class="bar-value">{{ dept.count }}</span>
+            </li>
+          }
+        </ul>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Pending leave requests</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @for (leave of d.pendingLeaves; track leave.id) {
+          <div class="list-row">
+            <app-avatar [name]="leave.employeeName" [size]="36" />
+            <div class="list-text">
+              <strong>{{ leave.employeeName }}</strong>
+              <small>
+                {{ leave.type }} · {{ leave.startDate | date: 'd MMM' }} – {{ leave.endDate | date: 'd MMM' }}
+                ({{ leave.days }}d)
+              </small>
+            </div>
+          </div>
+        } @empty {
+          <p class="muted">No pending requests. You're all caught up!</p>
+        }
+      </mat-card-content>
+      @if (d.pendingLeaveRequests) {
+        <mat-card-actions>
+          <a mat-button routerLink="/leaves">Review all ({{ d.pendingLeaveRequests }})</a>
+        </mat-card-actions>
+      }
+    </mat-card>
+
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Recent hires</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @for (emp of d.recentHires; track emp.id) {
+          <a class="list-row link-row" [routerLink]="['/employees', emp.id]">
+            <app-avatar [name]="emp.firstName + ' ' + emp.lastName" [size]="36" />
+            <div class="list-text">
+              <strong>{{ emp.firstName }} {{ emp.lastName }}</strong>
+              <small>{{ emp.designation }} · {{ emp.departmentName }}</small>
+            </div>
+            <small class="muted">{{ emp.dateOfJoining | date: 'd MMM' }}</small>
+          </a>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Upcoming birthdays</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @for (b of d.upcomingBirthdays; track b.employee.id) {
+          <div class="list-row">
+            <app-avatar [name]="b.employee.firstName + ' ' + b.employee.lastName" [size]="36" />
+            <div class="list-text">
+              <strong>{{ b.employee.firstName }} {{ b.employee.lastName }}</strong>
+              <small>{{ b.employee.departmentName }}</small>
+            </div>
+            <span class="date-pill"><mat-icon inline>cake</mat-icon> {{ b.date | date: 'd MMM' }}</span>
+          </div>
+        } @empty {
+          <p class="muted">No birthdays in the next 30 days.</p>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <ng-container *ngTemplateOutlet="holidaysCard; context: { $implicit: d.holidays }" />
+  </section>
+} @else if (mine(); as m) {
+  <!-- ===================== Employee dashboard ====================== -->
+  <section class="stat-grid">
+    @for (b of m.leaveBalance; track b.type) {
+      <mat-card class="stat-card clickable" routerLink="/leaves">
+        <span class="stat-icon"><mat-icon>event_available</mat-icon></span>
+        <div>
+          <div class="stat-value">{{ b.available }}<small> / {{ b.allowance }}</small></div>
+          <div class="stat-label">{{ b.type }} leave available</div>
+        </div>
+      </mat-card>
+    }
+    <mat-card class="stat-card">
+      <span class="stat-icon"><mat-icon>diversity_3</mat-icon></span>
+      <div>
+        <div class="stat-value">{{ m.teamSize }}</div>
+        <div class="stat-label">People in {{ m.employee.departmentName }}</div>
+      </div>
+    </mat-card>
+  </section>
+
+  <section class="dash-grid">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>My details</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="profile-summary">
+          <app-avatar [name]="m.employee.firstName + ' ' + m.employee.lastName" [size]="56" />
+          <div>
+            <strong>{{ m.employee.firstName }} {{ m.employee.lastName }}</strong>
+            <div class="muted">{{ m.employee.designation }}</div>
+          </div>
+        </div>
+        <dl class="detail-list">
+          <dt>Employee ID</dt><dd>{{ m.employee.employeeCode }}</dd>
+          <dt>Department</dt><dd>{{ m.employee.departmentName }}</dd>
+          <dt>Reports to</dt><dd>{{ m.employee.managerName ?? '—' }}</dd>
+          <dt>Joined</dt><dd>{{ m.employee.dateOfJoining | date: 'd MMM y' }}</dd>
+        </dl>
+      </mat-card-content>
+      <mat-card-actions>
+        <a mat-button routerLink="/profile">View profile</a>
+      </mat-card-actions>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>My recent leave</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @for (leave of m.recentLeaves; track leave.id) {
+          <div class="list-row">
+            <div class="list-text">
+              <strong>{{ leave.type }} leave · {{ leave.days }}d</strong>
+              <small>{{ leave.startDate | date: 'd MMM' }} – {{ leave.endDate | date: 'd MMM y' }}</small>
+            </div>
+            <app-status-chip [status]="leave.status" />
+          </div>
+        } @empty {
+          <p class="muted">You haven't applied for leave yet.</p>
+        }
+      </mat-card-content>
+      <mat-card-actions>
+        <a mat-button routerLink="/leaves">View all</a>
+      </mat-card-actions>
+    </mat-card>
+
+    <ng-container *ngTemplateOutlet="holidaysCard; context: { $implicit: m.holidays }" />
+  </section>
+}
+
+<ng-template #holidaysCard let-holidays>
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Upcoming holidays</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      @for (h of holidays; track h.date) {
+        <div class="list-row">
+          <span class="holiday-date">
+            <strong>{{ h.date | date: 'd' }}</strong>
+            <small>{{ h.date | date: 'MMM' }}</small>
+          </span>
+          <div class="list-text">
+            <strong>{{ h.name }}</strong>
+            <small>{{ h.date | date: 'EEEE' }}</small>
+          </div>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+</ng-template>

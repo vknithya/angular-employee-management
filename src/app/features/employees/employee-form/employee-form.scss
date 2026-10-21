@@ -1,0 +1,22 @@
+.form-section {
+  padding: 24px;
+  margin-bottom: 16px;
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 20px;
+    font: var(--mat-sys-title-medium);
+
+    mat-icon {
+      color: var(--mat-sys-primary);
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .form-section {
+    padding: 16px;
+  }
+}

@@ -1,0 +1,54 @@
+.back-link {
+  margin-bottom: 16px;
+}
+
+mat-card.hero {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding: 24px;
+  margin-bottom: 16px;
+
+  h1 {
+    margin: 0;
+    font: var(--mat-sys-headline-small);
+    font-weight: 600;
+  }
+
+  p {
+    margin: 4px 0 12px;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.hero-text {
+  flex: 1;
+  min-width: 220px;
+}
+
+.hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.hero-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.leave-history {
+  margin-top: 16px;
+
+  mat-card-header {
+    padding: 16px;
+  }
+}
+
+.padded {
+  padding: 0 16px 16px;
+}

@@ -1,0 +1,99 @@
+@if (loading.isLoading()) {
+  <mat-progress-bar class="global-progress" mode="indeterminate" />
+}
+
+<mat-sidenav-container class="shell">
+  <mat-sidenav
+    #sidenav
+    class="sidenav"
+    [mode]="isHandset() ? 'over' : 'side'"
+    [opened]="!isHandset()"
+  >
+    <div class="sidenav-brand">
+      <span class="brand-logo small"><mat-icon>groups</mat-icon></span>
+      <div>
+        <strong>EMS Portal</strong>
+        <small>Employee Management</small>
+      </div>
+    </div>
+
+    <mat-nav-list>
+      @for (item of navItems(); track item.route) {
+        <a
+          mat-list-item
+          [routerLink]="item.route"
+          routerLinkActive="active-link"
+          #rla="routerLinkActive"
+          [activated]="rla.isActive"
+          (click)="isHandset() && sidenav.close()"
+        >
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          <span matListItemTitle>{{ item.label }}</span>
+        </a>
+      }
+    </mat-nav-list>
+
+    <div class="sidenav-footer">
+      <span class="role-badge">{{ user()?.role === 'admin' ? 'Administrator' : 'Employee' }}</span>
+    </div>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="content">
+    <mat-toolbar class="toolbar">
+      <button mat-icon-button (click)="sidenav.toggle()" aria-label="Toggle navigation">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <span class="spacer"></span>
+
+      <button
+        mat-icon-button
+        (click)="theme.toggle()"
+        [matTooltip]="theme.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+        aria-label="Toggle dark mode"
+      >
+        <mat-icon>{{ theme.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+      </button>
+
+      @if (user(); as u) {
+        <button mat-button class="user-button" [matMenuTriggerFor]="userMenu">
+          <span class="user-button-inner">
+            <app-avatar [name]="u.fullName" [size]="32" />
+            <span class="user-name">{{ u.fullName }}</span>
+            <mat-icon>expand_more</mat-icon>
+          </span>
+        </button>
+
+        <mat-menu #userMenu="matMenu" xPosition="before">
+          <div class="menu-header">
+            <strong>{{ u.fullName }}</strong>
+            <small>{{ u.email }}</small>
+          </div>
+          <mat-divider />
+          <a mat-menu-item routerLink="/profile">
+            <mat-icon>account_circle</mat-icon>
+            <span>My Profile</span>
+          </a>
+          <button mat-menu-item (click)="resetDemoData()">
+            <mat-icon>restart_alt</mat-icon>
+            <span>Reset demo data</span>
+          </button>
+          <mat-divider />
+          <button mat-menu-item (click)="logout()">
+            <mat-icon>logout</mat-icon>
+            <span>Sign out</span>
+          </button>
+        </mat-menu>
+      }
+    </mat-toolbar>
+
+    <main class="page">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>
+
+@if (busyMessage(); as message) {
+  <div class="busy-overlay">
+    <app-loader [message]="message" />
+  </div>
+}

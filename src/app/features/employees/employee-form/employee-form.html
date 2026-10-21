@@ -1,0 +1,183 @@
+<app-page-header
+  [title]="isEdit() ? 'Edit employee' : 'Add employee'"
+  [subtitle]="isEdit() ? 'Update employee information' : 'Create a new employee record'"
+>
+  <a mat-button [routerLink]="isEdit() ? ['/employees', id()] : ['/employees']">
+    <mat-icon>arrow_back</mat-icon> Back
+  </a>
+</app-page-header>
+
+@if (isLoading()) {
+  <app-loader [message]="isEdit() ? 'Loading employee...' : 'Preparing form...'" />
+} @else if (notFound()) {
+  <app-empty-state icon="person_off" title="Employee not found" message="This record may have been deleted.">
+    <a mat-stroked-button routerLink="/employees">Back to employees</a>
+  </app-empty-state>
+} @else {
+  @if (errorMessage()) {
+    <div class="alert alert-error" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+    <mat-card class="form-section" formGroupName="personal">
+      <h2><mat-icon>person</mat-icon> Personal information</h2>
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>First name</mat-label>
+          <input matInput formControlName="firstName" autocomplete="off" />
+          <mat-error>First name is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Last name</mat-label>
+          <input matInput formControlName="lastName" autocomplete="off" />
+          <mat-error>Last name is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Work email</mat-label>
+          <input matInput type="email" formControlName="email" autocomplete="off" />
+          @if (personal.email.hasError('required')) {
+            <mat-error>Email is required</mat-error>
+          } @else if (personal.email.hasError('email')) {
+            <mat-error>Enter a valid email address</mat-error>
+          } @else if (personal.email.hasError('taken')) {
+            <mat-error>This email is already in use</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Phone</mat-label>
+          <input matInput type="tel" formControlName="phone" placeholder="+91 98765 43210" />
+          @if (personal.phone.hasError('required')) {
+            <mat-error>Phone is required</mat-error>
+          } @else {
+            <mat-error>Enter a valid phone number</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Gender</mat-label>
+          <mat-select formControlName="gender">
+            @for (g of genders; track g) {
+              <mat-option [value]="g">{{ g }}</mat-option>
+            }
+          </mat-select>
+          <mat-error>Gender is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Date of birth</mat-label>
+          <input matInput [matDatepicker]="dobPicker" formControlName="dateOfBirth" [max]="today" />
+          <mat-datepicker-toggle matIconSuffix [for]="dobPicker" />
+          <mat-datepicker #dobPicker startView="multi-year" />
+          @if (personal.dateOfBirth.hasError('minAge')) {
+            <mat-error>Employee must be at least 18 years old</mat-error>
+          } @else {
+            <mat-error>Enter a valid date of birth</mat-error>
+          }
+        </mat-form-field>
+      </div>
+    </mat-card>
+
+    <mat-card class="form-section" formGroupName="employment">
+      <h2><mat-icon>work</mat-icon> Employment details</h2>
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Department</mat-label>
+          <mat-select formControlName="departmentId">
+            @for (d of departments(); track d.id) {
+              <mat-option [value]="d.id">{{ d.name }}</mat-option>
+            }
+          </mat-select>
+          <mat-error>Department is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Designation</mat-label>
+          <input matInput formControlName="designation" placeholder="e.g. Software Engineer" />
+          <mat-error>Designation is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Employment type</mat-label>
+          <mat-select formControlName="employmentType">
+            @for (t of employmentTypes; track t) {
+              <mat-option [value]="t">{{ t }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            @for (s of statuses; track s) {
+              <mat-option [value]="s">{{ s }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Date of joining</mat-label>
+          <input matInput [matDatepicker]="dojPicker" formControlName="dateOfJoining" />
+          <mat-datepicker-toggle matIconSuffix [for]="dojPicker" />
+          <mat-datepicker #dojPicker />
+          <mat-error>Joining date is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Annual salary (₹)</mat-label>
+          <input matInput type="number" formControlName="salary" min="0" step="10000" />
+          @if (employment.salary.hasError('min')) {
+            <mat-error>Salary cannot be negative</mat-error>
+          } @else {
+            <mat-error>Salary is required</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Reporting manager</mat-label>
+          <mat-select formControlName="managerId">
+            <mat-option value="">No manager</mat-option>
+            @for (m of managers(); track m.id) {
+              <mat-option [value]="m.id">{{ m.firstName }} {{ m.lastName }} · {{ m.designation }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </mat-card>
+
+    <mat-card class="form-section" formGroupName="contact">
+      <h2><mat-icon>home</mat-icon> Contact</h2>
+      <div class="form-grid">
+        <mat-form-field appearance="outline" class="span-full">
+          <mat-label>Address</mat-label>
+          <textarea matInput formControlName="address" rows="2"></textarea>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Emergency contact number</mat-label>
+          <input matInput type="tel" formControlName="emergencyContact" />
+          <mat-error>Enter a valid phone number</mat-error>
+        </mat-form-field>
+      </div>
+    </mat-card>
+
+    <div class="form-actions">
+      <a mat-button [routerLink]="isEdit() ? ['/employees', id()] : ['/employees']">Cancel</a>
+      <button mat-flat-button type="submit" [disabled]="isSaving()">
+        @if (isSaving()) {
+          <span class="button-content">
+            <mat-spinner diameter="18" strokeWidth="3" />
+            Saving...
+          </span>
+        } @else {
+          {{ isEdit() ? 'Save changes' : 'Add employee' }}
+        }
+      </button>
+    </div>
+  </form>
+}

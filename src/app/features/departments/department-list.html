@@ -1,0 +1,55 @@
+<app-page-header title="Departments" subtitle="Organize teams and assign department heads">
+  <button mat-flat-button (click)="openDialog()" [disabled]="isLoading()">
+    <mat-icon>add</mat-icon> New department
+  </button>
+</app-page-header>
+
+@if (isLoading()) {
+  <app-loader message="Loading departments..." />
+} @else if (loadFailed()) {
+  <app-empty-state icon="cloud_off" title="Couldn't load departments" message="Please try again.">
+    <button mat-stroked-button (click)="load()">Retry</button>
+  </app-empty-state>
+} @else {
+  <div class="dept-grid">
+    @for (dept of departments(); track dept.id) {
+      <mat-card class="dept-card" [class.row-busy]="deletingId() === dept.id">
+        <div class="dept-top">
+          <span class="dept-code">{{ dept.code }}</span>
+          @if (deletingId() === dept.id) {
+            <mat-spinner diameter="24" />
+          } @else {
+            <button mat-icon-button [matMenuTriggerFor]="menu" [attr.aria-label]="'Actions for ' + dept.name">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #menu="matMenu" xPosition="before">
+              <button mat-menu-item (click)="openDialog(dept)"><mat-icon>edit</mat-icon> Edit</button>
+              <button mat-menu-item class="danger-text" (click)="delete(dept)"><mat-icon>delete</mat-icon> Delete</button>
+            </mat-menu>
+          }
+        </div>
+        <h3>{{ dept.name }}</h3>
+        <p class="muted description">{{ dept.description || 'No description' }}</p>
+        <dl class="detail-list">
+          <dt>Head</dt>
+          <dd>
+            @if (dept.headId) {
+              <a [routerLink]="['/employees', dept.headId]">{{ dept.headName }}</a>
+            } @else {
+              <span class="muted">Not assigned</span>
+            }
+          </dd>
+          <dt>Location</dt><dd>{{ dept.location || '—' }}</dd>
+        </dl>
+        <div class="dept-footer">
+          <mat-icon inline>groups</mat-icon>
+          <strong>{{ dept.employeeCount }}</strong> {{ dept.employeeCount === 1 ? 'employee' : 'employees' }}
+        </div>
+      </mat-card>
+    } @empty {
+      <app-empty-state icon="apartment" title="No departments yet" message="Create your first department.">
+        <button mat-flat-button (click)="openDialog()">New department</button>
+      </app-empty-state>
+    }
+  </div>
+}

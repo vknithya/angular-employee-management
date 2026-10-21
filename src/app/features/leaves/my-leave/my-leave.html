@@ -1,0 +1,83 @@
+@if (isLoading()) {
+  <app-loader message="Loading your leave..." />
+} @else if (loadFailed()) {
+  <app-empty-state icon="cloud_off" title="Couldn't load your leave" message="Please try again.">
+    <button mat-stroked-button (click)="load()">Retry</button>
+  </app-empty-state>
+} @else {
+  <section class="balance-grid">
+    @for (b of balances(); track b.type) {
+      <mat-card class="balance-card">
+        <div class="balance-head">
+          <span>{{ b.type }} leave</span>
+          <strong>{{ b.available }}<small> / {{ b.allowance }} days</small></strong>
+        </div>
+        <mat-progress-bar mode="determinate" [value]="((b.used + b.pending) / b.allowance) * 100" />
+        <small class="muted">{{ b.used }} used · {{ b.pending }} pending</small>
+      </mat-card>
+    }
+    <mat-card class="balance-card apply-card">
+      <p>Need time off?</p>
+      <button mat-flat-button (click)="apply()"><mat-icon>add</mat-icon> Apply for leave</button>
+    </mat-card>
+  </section>
+
+  <mat-card class="table-card">
+    <mat-card-header class="card-header-padded">
+      <mat-card-title>My requests</mat-card-title>
+    </mat-card-header>
+
+    @if (requests().length) {
+      <div class="table-scroll">
+        <table mat-table [dataSource]="requests()">
+          <ng-container matColumnDef="type">
+            <th mat-header-cell *matHeaderCellDef>Type</th>
+            <td mat-cell *matCellDef="let l">{{ l.type }}</td>
+          </ng-container>
+          <ng-container matColumnDef="dates">
+            <th mat-header-cell *matHeaderCellDef>Dates</th>
+            <td mat-cell *matCellDef="let l" class="nowrap">
+              {{ l.startDate | date: 'd MMM' }} – {{ l.endDate | date: 'd MMM y' }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="days">
+            <th mat-header-cell *matHeaderCellDef>Days</th>
+            <td mat-cell *matCellDef="let l">{{ l.days }}</td>
+          </ng-container>
+          <ng-container matColumnDef="reason">
+            <th mat-header-cell *matHeaderCellDef>Reason</th>
+            <td mat-cell *matCellDef="let l">
+              {{ l.reason }}
+              @if (l.reviewerComment) {
+                <div class="reviewer-note"><mat-icon inline>comment</mat-icon> {{ l.reviewerComment }}</div>
+              }
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let l">
+              <app-status-chip
+                [status]="l.status"
+                [matTooltip]="l.reviewedBy ? 'By ' + l.reviewedBy + ' on ' + (l.reviewedOn | date: 'd MMM') : ''"
+              />
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef><span class="sr-only">Actions</span></th>
+            <td mat-cell *matCellDef="let l" class="actions-cell">
+              @if (cancellingId() === l.id) {
+                <mat-spinner diameter="24" />
+              } @else if (l.status === 'Pending') {
+                <button mat-button class="danger-text" (click)="cancel(l)">Cancel</button>
+              }
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="columns"></tr>
+          <tr mat-row *matRowDef="let row; columns: columns"></tr>
+        </table>
+      </div>
+    } @else {
+      <app-empty-state icon="beach_access" title="No leave requests yet" message="When you apply for leave, it will show up here." />
+    }
+  </mat-card>
+}

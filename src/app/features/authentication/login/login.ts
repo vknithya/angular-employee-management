@@ -1,5 +1,4 @@
-import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -8,6 +7,10 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { DEMO_ACCOUNTS } from '../../../core/mock-api/seed-data';
+import { NotificationService } from '../../../core/services/notification.service';
+import { getErrorMessage } from '../../../core/utils/http-error.utils';
 import { AuthService } from '../auth';
 import { LoginRequest } from '../login-request.model';
 
@@ -21,8 +24,8 @@ import { LoginRequest } from '../login-request.model';
     MatIconModule,
     MatCheckboxModule,
     ReactiveFormsModule,
-    CommonModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    RouterLink
   ],
   templateUrl: './login.html',
   styleUrl: './login.scss',
@@ -30,37 +33,55 @@ import { LoginRequest } from '../login-request.model';
 export class Login {
 
   private readonly fb = inject(FormBuilder);
-  private authService = inject(AuthService);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+  private readonly notify = inject(NotificationService);
 
-  hidePassword = true;
-  isLoading = false;
-  private readonly MOCK_API_DELAY = 2000;
+  readonly demoAccounts = DEMO_ACCOUNTS;
+  readonly sessionExpired = this.route.snapshot.queryParamMap.has('expired');
+
+  // Signals (not plain fields) so the zoneless change detection picks up async updates.
+  hidePassword = signal(true);
+  isLoading = signal(false);
+  errorMessage = signal<string | null>(null);
 
   loginForm = this.fb.nonNullable.group({
-  email: ['', [Validators.required, Validators.email]],
-  password: ['', [Validators.required, Validators.minLength(8)]],
-  rememberMe: [false]
-});
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(8)]],
+    rememberMe: [false]
+  });
 
-togglePasswordVisibility() {
-  this.hidePassword = !this.hidePassword;
-}
-
-onLogin(): void {
-  if (this.loginForm.invalid) {
-    this.loginForm.markAllAsTouched();
-    return;
+  togglePasswordVisibility() {
+    this.hidePassword.update((hidden) => !hidden);
   }
-  this.isLoading = true;
 
-  console.log(this.loginForm.getRawValue());
-  //const { email, password } = this.loginForm.getRawValue();
-  const request: LoginRequest = this.loginForm.getRawValue();
-  //this.authService.login(email,password);
-  this.authService.login(request);
+  useDemoAccount(account: (typeof DEMO_ACCOUNTS)[number]): void {
+    this.loginForm.patchValue({ email: account.email, password: account.password });
+    this.errorMessage.set(null);
+  }
 
-  setTimeout(() => {
-    this.isLoading = false;
-  }, this.MOCK_API_DELAY);
-}
+  onLogin(): void {
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
+      return;
+    }
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
+    this.loginForm.disable();
+
+    const request: LoginRequest = this.loginForm.getRawValue();
+    this.authService.login(request).subscribe({
+      next: (user) => {
+        this.notify.success(`Welcome back, ${user.fullName.split(' ')[0]}!`);
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+        this.router.navigateByUrl(returnUrl?.startsWith('/') ? returnUrl : '/dashboard');
+      },
+      error: (error: unknown) => {
+        this.errorMessage.set(getErrorMessage(error, 'Unable to sign in. Please try again.'));
+        this.isLoading.set(false);
+        this.loginForm.enable();
+      }
+    });
+  }
 }
