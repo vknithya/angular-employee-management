@@ -1,4 +1,4 @@
-# EMS Portal — Employee Management
+# HMS Portal — Hospital Management
 
 A frontend-only MVP of an employee management portal, built with Angular 21 (standalone, signals, zoneless) and Angular Material 3.
 
